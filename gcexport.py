@@ -243,15 +243,22 @@ def http_req(url, post=None, headers=None):
         if python3:
             post = post.encode("utf-8")
     start_time = timer()
-    try:
-        response = OPENER.open(request, data=post)
-    except URLError as ex:
-        if hasattr(ex, 'reason'):
-            logging.error('Failed to reach url %s, error: %s', url, ex)
-            raise
-        else:
-            raise
-    logging.debug('Got %s in %s s from %s', response.getcode(), timer() - start_time, url)
+    tries = MAX_TRIES
+    while tries > 0:
+        try:
+            response = OPENER.open(request, data=post)
+            logging.debug('Got %s in %s s from %s', response.getcode(), timer() - start_time, url)
+            tries = 0
+        except URLError as ex:
+            if tries == 0:
+                if hasattr(ex, 'reason'):
+                    logging.error('Failed to reach url %s, error: %s', url, ex)
+                    raise
+                else:
+                    raise
+            else:
+                tries -= 1
+                logging.warning('Failed to reach url %s, trying: %s of %s', url, (tries * -1) + 3, MAX_TRIES)
 
     # N.B. urllib2 will follow any 302 redirects.
     # print(response.getcode())
