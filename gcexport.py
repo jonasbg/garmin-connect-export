@@ -257,8 +257,8 @@ def http_req(url, post=None, headers=None):
                 else:
                     raise
             else:
-                logging.warning('Failed to reach url %s, tries: %s', url, (tries * -1) +4)
                 tries -= 1
+                logging.warning('Failed to reach url %s, trying: %s of %s', url, (tries * -1) + 3, MAX_TRIES)
 
     # N.B. urllib2 will follow any 302 redirects.
     # print(response.getcode())
