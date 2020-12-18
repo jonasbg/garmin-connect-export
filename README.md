@@ -5,6 +5,16 @@ Download a copy of your Garmin Connect data, including stats and GPX tracks.
 
 Note that Garmin introduced recently (around May 2018, for GDPR compatibility) a possibility to [download all of your Garmin Connect data](https://www.garmin.com/en-US/account/datamanagement/exportdata/) in one zip file. Depending on your needs this might be enough, but the script here offers additional features like getting GPX tracks instead of the original upload format or limiting the export to just a couple of activities.
 
+## Automation
+------------------
+My change to this repository is mainly to get this script to run in an automated environment, such as `crond` job. Example on `crond` job is:
+``` /bin/sh
+#!/usr/bin/env sh                                                                                                      
+python /app/gcexport.py -u --username $username --password $password --count all --directory /data --subdir {YYYY}
+```
+Store this file without extension at `etc/periodic/daily/garmin-connect` `(# cat /etc/periodic/daily/garmin-connect)`
+If you put this in a docker container start that with `crond -f -l 8`
+
 Forks and Branches
 ------------------
 Before going into the details of this script itself, some meta information.
