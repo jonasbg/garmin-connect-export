@@ -244,6 +244,7 @@ def http_req(url, post=None, headers=None):
             post = post.encode("utf-8")
     start_time = timer()
     tries = MAX_TRIES
+    response = None
     while tries > 0:
         try:
             response = OPENER.open(request, data=post)
@@ -252,13 +253,14 @@ def http_req(url, post=None, headers=None):
         except URLError as ex:
             if tries == 0:
                 if hasattr(ex, 'reason'):
-                    logging.error('Failed to reach url %s, error: %s', url, ex)
-                    raise
-                else:
-                    raise
+                    logging.error('[SKIPPING] Failed to reach url %s, error: %s', url, ex)
             else:
                 tries -= 1
                 logging.warning('Failed to reach url %s, trying: %s of %s', url, (tries * -1) + 3, MAX_TRIES)
+
+    if response == None:
+        logging.error('[SKIPPING] Failed to reach url %s', url)
+        return None
 
     # N.B. urllib2 will follow any 302 redirects.
     # print(response.getcode())
@@ -702,7 +704,7 @@ def load_gear(activity_id, args):
             logging.debug("Gear for %s = %s/%s", activity_id, gear_display_name, gear_model)
             return gear_display_name if gear_display_name else gear_model
         return None
-    except HTTPError:
+    except:
         pass  # don't abort just for missing gear...
         # logging.info("Unable to get gear for %d", activity_id)
         # logging.exception(e)
@@ -752,13 +754,13 @@ def export_data_file(activity_id, activity_details, args, file_time, append_desc
     if os.path.isfile(data_filename):
         logging.debug('Data file for %s already exists', activity_id)
         print('\tData file already exists; skipping...')
-        return
+        return False
 
     # Regardless of unzip setting, don't redownload if the ZIP or FIT file exists.
     if args.format == 'original' and os.path.isfile(fit_filename):
         logging.debug('Original data file for %s already exists', activity_id)
         print('\tFIT data file already exists; skipping...')
-        return
+        return False
 
     if args.format != 'json':
         # Download the data file from Garmin Connect. If the download fails (e.g., due to timeout),
@@ -816,7 +818,8 @@ def export_data_file(activity_id, activity_details, args, file_time, append_desc
             else:
                 print('\tSkipping 0Kb zip file.')
             os.remove(data_filename)
-
+            
+    return True
 
 def setup_logging():
     """Setup logging"""
@@ -983,17 +986,20 @@ def main(argv):
                 details = None
                 tries = MAX_TRIES
                 while tries > 0:
-                    activity_details = http_req_as_string(URL_GC_ACTIVITY + str(actvty['activityId']))
-                    details = json.loads(activity_details)
-                    # I observed a failure to get a complete JSON detail in about 5-10 calls out of 1000
-                    # retrying then statistically gets a better JSON ;-)
-                    if details['summaryDTO']:
-                        tries = 0
-                    else:
-                        logging.info("Retrying activity details download %s", URL_GC_ACTIVITY + str(actvty['activityId']))
-                        tries -= 1
-                        if tries == 0:
-                            raise Exception('Didn\'t get "summaryDTO" after ' + str(MAX_TRIES) + ' tries for ' + str(actvty['activityId']))
+                    try:
+                        activity_details = http_req_as_string(URL_GC_ACTIVITY + str(actvty['activityId']))
+                        details = json.loads(activity_details)
+                        # I observed a failure to get a complete JSON detail in about 5-10 calls out of 1000
+                        # retrying then statistically gets a better JSON ;-)
+                        if details['summaryDTO']:
+                            tries = 0
+                        else:
+                            logging.info("Retrying activity details download %s", URL_GC_ACTIVITY + str(actvty['activityId']))
+                            tries -= 1
+                            if tries == 0:
+                                raise Exception('Didn\'t get "summaryDTO" after ' + str(MAX_TRIES) + ' tries for ' + str(actvty['activityId']))
+                    except:
+                        pass
 
                 extract = {}
                 extract['start_time_with_offset'] = offset_date_time(actvty['startTimeLocal'], actvty['startTimeGMT'])
@@ -1043,10 +1049,11 @@ def main(argv):
                     extract['gear'] = load_gear(str(actvty['activityId']), args)
 
                 # Write stats to CSV.
-                csv_write_record(csv_filter, extract, actvty, details, activity_type_name, event_type_name)
-
-                export_data_file(str(actvty['activityId']), activity_details, args, start_time_seconds, append_desc,
-                                 actvty['startTimeLocal'])
+                # Save the file and inform if it already existed. If the file already existed, do not apped the record to the csv
+                if export_data_file(str(actvty['activityId']), activity_details, args, start_time_seconds, append_desc,
+                                 actvty['startTimeLocal']):
+                    # Write stats to CSV.
+                    csv_write_record(csv_filter, extract, actvty, details, activity_type_name, event_type_name)
 
             current_index += 1
         # End for loop for activities of chunk

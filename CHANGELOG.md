@@ -5,6 +5,7 @@ This changelog is inspired by [Keep a Changelog](https://keepachangelog.com/en/1
 ## 3.0.3 - 2020-12-14
 
 - fixed: Retry mechanism for http requests now respects MAX_TRIES
+- fixed: After MAX_TRIES is exceeded, the download will SKIP and CONTINUE
 
 
 ## 3.0.2 - 2020-11-15
