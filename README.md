@@ -8,11 +8,12 @@ Note that Garmin introduced recently (around May 2018, for GDPR compatibility) a
 ## Automation
 ------------------
 My change to this repository is mainly to get this script to run in an automated environment, such as `crond` job. Example on `crond` job is:
+`(# cat /etc/periodic/daily/garmin-connect)`
 ``` /bin/sh
 #!/usr/bin/env sh                                                                                                      
 python /app/gcexport.py -u --username $username --password $password --count all --directory /data --subdir {YYYY}
 ```
-Store this file without extension at `etc/periodic/daily/garmin-connect` `(# cat /etc/periodic/daily/garmin-connect)`
+Store this file without extension at `etc/periodic/daily/garmin-connect` and make it executable `chmod +x garmin-connect`
 If you put this in a docker container start that with `crond -f -l 8`
 
 Forks and Branches
