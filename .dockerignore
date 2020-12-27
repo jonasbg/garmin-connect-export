@@ -1,0 +1,9 @@
+json
+.github
+*.md
+.pylintrc
+.gitignore
+Dockerfile
+LICENSE
+*.log
+data

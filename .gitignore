@@ -8,3 +8,4 @@ venv/
 *.pyc
 *.log
 lint*.txt
+data/

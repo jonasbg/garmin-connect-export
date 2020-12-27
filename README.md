@@ -5,7 +5,14 @@ Download a copy of your Garmin Connect data, including stats and GPX tracks.
 
 Note that Garmin introduced recently (around May 2018, for GDPR compatibility) a possibility to [download all of your Garmin Connect data](https://www.garmin.com/en-US/account/datamanagement/exportdata/) in one zip file. Depending on your needs this might be enough, but the script here offers additional features like getting GPX tracks instead of the original upload format or limiting the export to just a couple of activities.
 
-## Automation
+## My Changes
+Docker support is added.
+```
+docker build -t jonasbg/garmin-connect:(date '+%Y%m%d') .
+docker scan jonasbg/garmin-connect
+docker run --rm -e USERNAME=$USERNAME -e PASSWORD="$PASSWORD" -v $PWD/data:/data -it jonasbg/garmin-connect /bin/sh
+```
+
 My change to this repository is mainly to get this script to run in an automated environment, such as `crond` job. Example on `crond` job is:
 `(# cat /etc/periodic/daily/garmin-connect)`
 ``` /bin/sh

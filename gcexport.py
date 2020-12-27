@@ -824,7 +824,7 @@ def export_data_file(activity_id, activity_details, args, file_time, append_desc
 def setup_logging():
     """Setup logging"""
     logging.basicConfig(
-        filename='gcexport.log',
+        filename='/var/log/garmin/gcexport.log',
         level=logging.DEBUG,
         format='%(asctime)s [%(levelname)-7.7s] %(message)s'
     )
