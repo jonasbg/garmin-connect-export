@@ -1,2 +1,0 @@
-#!/usr/bin/env sh                                                                                                                          
-python /app/gcexport.py -u --username $USERNAME --password $PASSWORD --count all --directory /data --subdir {YYYY}
