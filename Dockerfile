@@ -1,4 +1,4 @@
-FROM python:3.9.1-alpine3.12
+FROM python:3.10.0a6-alpine3.12
 
 ENV USERNAME=
 ENV PASSWORD=
